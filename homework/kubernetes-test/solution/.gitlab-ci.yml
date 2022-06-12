@@ -1,0 +1,80 @@
+tf-fmt:
+  stage: terraform:check
+  extends: .base-terraform
+  script:
+    - terraform fmt -check -recursive terraform/
+  needs: []
+  
+tf-validate:
+  stage: terraform:check
+  extends: .base-terraform
+  script: |
+      terraform -chdir=terraform/production init -input=false -backend-config="access_key=$TF_VAR_access_key" -backend-config="secret_key=$TF_VAR_secret_key" 
+      terraform -chdir=terraform/production validate 
+  needs: []
+
+stages:
+  - terraform:check
+  - terraform:plan
+  - terraform:apply
+
+.base-terraform:
+  image: 
+    name: "hashicorp/terraform"
+    entrypoint: [""]
+  before_script:
+    # set the aws service account credentials from the variables
+    - export TF_VAR_access_key="${AWS_ACCESS_KEY_ID}"
+    - export TF_VAR_secret_key="${AWS_SECRET_ACCESS_KEY}"
+    - terraform version
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH
+      changes:
+      - terraform/**
+tf-plan:
+  stage: terraform:plan
+  extends: .base-terraform
+  variables:
+    STACK: "terraform/production"
+    WORKSPACE: default 
+    VARS: "-var-file=badams.tfvars"
+  script:
+    - terraform -chdir=${STACK} init -input=false -backend-config="access_key=$AWS_ACCESS_KEY_ID" -backend-config="secret_key=$AWS_SECRET_ACCESS_KEY"
+    - terraform workspace select ${WORKSPACE} 
+    - terraform -chdir=${STACK} plan -out=${WORKSPACE}.tfplan ${VARS}
+    - tar -cvf terraform.tar ${STACK}/.terraform 
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH
+      changes:
+        - terraform/**
+        - my.tfvars
+  artifacts:
+    name: ${WORKSPACE}
+    paths:
+      - ./${STACK}/*.tfplan
+      - ./*terraform.tar
+      # - ./${STACK}/.terraform
+    expire_in: 1 week
+
+tf-apply:
+  stage: terraform:apply
+  extends: .base-terraform
+  variables:
+    STACK: "terraform/production"
+    PLAN_FILE: default.tfplan
+    WORKSPACE: default
+  script:
+      - tar -xvf terraform.tar 
+      - ls -lha ${STACK}
+      - terraform workspace select ${WORKSPACE}
+      - cd "terraform/production" && terraform init && terraform apply -auto-approve ${PLAN_FILE}
+  environment:
+    name: aws 
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - terraform/**
+        - my.tfvars   
+      when: manual
+  dependencies: 
+    - tf-plan

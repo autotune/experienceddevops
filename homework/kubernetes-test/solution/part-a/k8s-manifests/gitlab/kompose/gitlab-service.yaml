@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.22.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: gitlab
+  name: gitlab
+spec:
+  type: LoadBalancer
+  ports:
+    - name: "4567"
+      port: 4567
+      targetPort: 4567
+    - name: "80"
+      port: 80
+      targetPort: 80
+    - name: "443"
+      port: 443
+      targetPort: 443
+    - name: "3143"
+      port: 3143
+      targetPort: 443
+    - name: "3122"
+      port: 3122
+      targetPort: 22
+  selector:
+    io.kompose.service: gitlab

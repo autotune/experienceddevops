@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.22.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: runner
+  name: runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: runner
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.22.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/development: "true"
+        io.kompose.service: runner
+    spec:
+      containers:
+        - image: gitlab/gitlab-runner:latest
+          name: gitlab-runner
+          resources: {}
+          volumeMounts:
+            - mountPath: /etc/gitlab-runner
+              name: runner-claim0
+            - mountPath: /var/run/docker.sock
+              name: runner-claim1
+      restartPolicy: Always
+      volumes:
+        - name: runner-claim0
+          persistentVolumeClaim:
+            claimName: runner-claim0
+        - name: runner-claim1
+          persistentVolumeClaim:
+            claimName: runner-claim1
+status: {}

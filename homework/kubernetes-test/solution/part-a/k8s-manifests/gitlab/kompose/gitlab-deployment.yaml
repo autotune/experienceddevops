@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.22.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: gitlab
+  name: gitlab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: gitlab
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.22.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/development: "true"
+        io.kompose.service: gitlab
+    spec:
+      containers:
+        - env:
+            - name: GITLAB_OMNIBUS_CONFIG
+              value: |
+                external_url 'https://gitlab.badams.ninja:3143'
+                letsencrypt['enable'] = true 
+                gitlab_rails['gitlab_shell_ssh_port'] = 3122
+                nginx['listen_port'] = 443
+                nginx['redirect_http_to_https'] = true
+                nginx['redirect_http_to_https_port'] = 80
+                nginx['ssl_certificate'] = "/etc/ssl/certs/gitlab/server-cert.pem"
+                nginx['ssl_certificate_key'] = "/etc/ssl/certs/gitlab/server-key.pem"
+                registry_external_url 'https://gitlab.badams.ninja:4567'
+                registry_nginx['enable'] = true
+                registry_nginx['ssl_certificate'] = "/etc/ssl/certs/gitlab/server-cert.pem"
+                registry_nginx['ssl_certificate_key'] = "/etc/ssl/certs/gitlab/server-key.pem"
+                gitlab_rails['backup_keep_time'] = 172800
+          image: gitlab/gitlab-ce:latest
+          name: gitlab
+          ports:
+            - containerPort: 4567
+            - containerPort: 443
+            - containerPort: 80 
+            - containerPort: 22
+          resources: {}
+          volumeMounts:
+            - mountPath: /etc/gitlab
+              name: gitlab-claim4
+            - mountPath: /var/log/gitlab
+              name: gitlab-claim5
+            - mountPath: /etc/ssl/certs/gitlab
+              name: gitlab-claim6
+            - mountPath: /var/opt/gitlab
+              name: gitlab-claim7
+      restartPolicy: Always
+      volumes:
+        - name: gitlab-claim4
+          persistentVolumeClaim:
+            claimName: gitlab-claim4
+        - name: gitlab-claim5
+          persistentVolumeClaim:
+            claimName: gitlab-claim5
+        - name: gitlab-claim6
+          persistentVolumeClaim:
+            claimName: gitlab-claim6
+        - name: gitlab-claim7
+          persistentVolumeClaim:
+            claimName: gitlab-claim7
+status: {}

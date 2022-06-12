@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: app
+  labels:
+    app: api
+    release: prometheus
+spec:
+  namespaceSelector:
+    any: true 
+  selector:
+    matchLabels:
+        app: api
+  endpoints:
+  - port: http 
+    path: /metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+spec:
+  serviceAccountName: prometheus
+  serviceMonitorSelector:
+    matchLabels:
+      app: api
+  resources:
+    requests:
+      memory: 400Mi
+
