@@ -1,0 +1,7 @@
+kind: Secret
+type: kubernetes.io/dockerconfigjson
+apiVersion: v1
+metadata:
+  name: wayofthesys-github-com-login
+data:
+  .dockerconfigjson: ewogICAgImF1dGhzIjoKICAgIHsKICAgICAgICAiZ2hjci5pbyI6CiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICMgImF1dGgiOiIkeyBkb2NrZXJfc2VjcmV0X2VuY29kZWQgfSIKICAgICAgICAgICAgICAgICJhdXRoIjoiTFc1aGRYUnZkSFZ1WlRwbmFIQmZUVFEyZHpKUGVXMXZhMFY1U1RFelJISnFhbVJQVUVSSGQyNXNXbkoyTWxRM01IZzVDZz09IgogICAgICAgICAgICB9CiAgICB9Cn0K 

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+pritunl set-mongodb mongodb://pritunl:$MONGODB_ROOT_PASSWORD@$MONGO_HOST:27017/pritunl?authSource=admin
+pritunl set app.reverse_proxy true
+pritunl set app.server_ssl false # this has to be true when not behind an elb, but when using with an elb, this should be disabled if you're using an ACM cert on the load balancer
+pritunl set app.server_port 443 # this should be your web ui port
+pritunl start

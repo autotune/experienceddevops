@@ -1,0 +1,74 @@
+name: Deploy Infrastructure
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - 'terraform/atlantis.yaml'
+      - 'terraform/atlantis/**'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    name: Build docker image
+    steps:
+      - uses: actions/checkout@master
+      - name: Get short SHA
+        id: slug
+        run: echo "::set-output name=sha8::$(echo ${GITHUB_SHA} | cut -c1-8)"
+      - name: GitHub Package Registry
+        uses: aevea/action-kaniko@master
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GH_USERNAME }}
+          password: ${{ secrets.PACKAGE_REGISTRY_PAT }}
+          build_file: ./pritunl/Dockerfile
+          image: autotune/pritunl-k8s-tf-do/pritunl
+          tag: ${{ steps.slug.outputs.sha8 }}
+          cache: true
+          cache_registry: cache
+
+  tf_fmt:
+    name: Deploy 
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout Repo
+      uses: actions/checkout@master
+
+    - name: Terraform Init
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: 0.13.0
+        tf_actions_working_dir: 'terraform'
+        tf_actions_subcommand: 'init'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TF_ACTION_WORKING_DIR: 'terraform'
+        AWS_ACCESS_KEY_ID:  ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        DIGITALOCEAN_TOKEN:  ${{ secrets.DO_TOKEN }}
+
+    - name: Terraform Validate
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: 0.13.0
+        tf_actions_working_dir: 'terraform'
+        tf_actions_subcommand: 'validate'
+
+    - name: Terraform Apply
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: 0.13.0
+        tf_actions_working_dir: 'terraform'
+        tf_actions_subcommand: 'apply'
+        args: '-var="mongodb_root_password=${{ secrets.MONGODB_ROOT_PASSWORD }}" -var="gh_username=${{ secrets.GH_USERNAME }}" -var="package_registry_pat=${{ secrets.PACKAGE_REGISTRY_PAT }}" -var="aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID}}" -var aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY}}" -var="oauth_cookie_secret=${{ secrets.OAUTH_COOKIE_SECRET }}" -var="oauth_client_id=${{ secrets.OAUTH_CLIENT_ID }}" -var=oauth_client_secret=${{ secrets.OAUTH_CLIENT_SECRET }} -var="sslcom_private_hmac_key=${{ secrets.SSLCOM_PRIVATE_KEYID }}" -var=sslcom_keyid=${{ secrets.SSLCOM_KEYID }} -var=sslcom_hmac_key=${{ secrets.SSLCOM_HMAC_KEY }}" -var="do_token=${{ secrets.DO_TOKEN }}" -var="atlantis_github_user=${{ secrets.ATLANTIS_GH_USER }} -var="atlantis_github_user_token=${{ secrets.ATLANTIS_GH_USER_TOKEN }} -var="letsencrypt_email"=${{ secrets.LETSENCRYPT_EMAIL }} -var="atlantis_github_user_token=${{ secrets.ATLANTIS_GH_TOKEN }}" -var="github_token=${{ secrets.ATLANTIS_GH_TOKEN }} -var="atlantis_github_user=${{ secrets.ATLANTIS_GH_USER }}"'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TF_ACTION_WORKING_DIR: 'terraform'
+        AWS_ACCESS_KEY_ID:  ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY:  ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        DIGITALOCEAN_TOKEN:  ${{ secrets.DO_TOKEN }}
+
+

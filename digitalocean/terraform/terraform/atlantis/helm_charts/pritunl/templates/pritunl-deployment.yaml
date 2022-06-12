@@ -1,0 +1,109 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: {{ template "pritunl.fullname" . }}
+  labels:
+    app: {{ template "pritunl.name" . }}
+    chart: {{ template "pritunl.chart" . }}
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "pritunl.name" . }}
+      release: "{{ .Release.Name }}"
+  template:
+    metadata:
+      labels:
+        app: {{ template "pritunl.name" . }}
+        release: "{{ .Release.Name }}"
+        chart: {{ template "pritunl.chart" . }}
+    spec:
+      imagePullSecrets:
+      - name: {{ .Values.image.pullSecret | quote }}
+      initContainers:
+      - name: {{ template "pritunl.fullname" . }}-init
+        image: {{ template "pritunl.image" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+        command: ["python3", "/tmp/mongo_add_user.py"]
+        # This variable gets passed to the pods to insert the resolvable DNS hostname of the MongoDB service.
+        env:
+        - name: MONGODB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-root-password
+              key: MONGODB_ROOT_PASSWORD
+        - name: MONGO_HOST
+          value: {{ .Values.mongoService }}
+        ports:
+          - containerPort: {{ .Values.ports.http }}
+            name: backend-http
+            protocol: TCP
+          - containerPort: {{ .Values.ports.vpn }}
+            name: backend-vpn
+            protocol: TCP
+          - containerPort: {{ .Values.ports.webui }}
+            name: backend-webui
+            protocol: TCP
+      containers:
+      - name: {{ template "pritunl.fullname" . }}
+        image: {{ template "pritunl.image" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+        # This variable gets passed to the pods to insert the resolvable DNS hostname of the MongoDB service.
+        env:
+        - name: MONGODB_ROOT_PASSWORD
+          valueFrom: 
+            secretKeyRef: 
+              name: mongodb-root-password 
+              key: MONGODB_ROOT_PASSWORD
+        - name: MONGO_HOST
+          value: {{ .Values.mongoService }}
+        ports:
+          - containerPort: {{ .Values.ports.http }}
+            name: backend-http
+            protocol: TCP
+          - containerPort: {{ .Values.ports.vpn }}
+            name: backend-vpn
+            protocol: TCP
+          - containerPort: {{ .Values.ports.webui }}
+            name: backend-webui
+            protocol: TCP
+        # We need tty so we can manage the containers in the pods. It requires stdin too. See kube docs for more info.
+        {{- if .Values.tty.enabled }}
+        stdin: true
+        tty: true
+        {{- end }}
+        # The settings for both of these can be changed in 'values.yaml'.
+        {{- if .Values.livenessProbe.enabled }}
+        livenessProbe:
+          tcpSocket:
+            port: {{ .Values.ports.webui }}
+          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.livenessProbe.successThreshold }}
+          failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+        {{- end }}
+        {{- if .Values.readinessProbe.enabled }}
+        readinessProbe:
+          tcpSocket:
+            port: {{ .Values.ports.webui }}
+          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.readinessProbe.successThreshold }}
+          failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+        {{- end }}
+        {{- if .Values.privileged.enabled }}
+        securityContext:
+          privileged: true
+        {{- end }}
+        volumeMounts:
+          - mountPath: "~/.dockercfg"
+            name: dockerconfig
+            readOnly: true
+      volumes:
+        - name: dockerconfig
+          secret:
+            secretName: wayofthesys-com-docker-login

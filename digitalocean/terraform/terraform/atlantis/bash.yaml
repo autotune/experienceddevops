@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-03-25T21:11:24Z"
+  labels:
+    run: bash
+  name: bash
+  namespace: mongodb
+  resourceVersion: "8207196"
+  uid: 76b35b71-9562-43fd-b6be-a9bc844b9a1e
+spec:
+  containers:
+  - image: ubuntu:20.04 
+    imagePullPolicy: Always
+    name: bash
+    resources: {}
+    stdin: true
+    stdinOnce: true
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    tty: true
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-2cpcf
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: k8s-nodepool-udbd5
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-2cpcf
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-03-25T21:11:24Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2022-03-25T21:11:24Z"
+    message: 'containers with unready status: [bash]'
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2022-03-25T21:11:24Z"
+    message: 'containers with unready status: [bash]'
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2022-03-25T21:11:24Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - image: dnsutils
+    imageID: ""
+    lastState: {}
+    name: bash
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      waiting:
+        message: Back-off pulling image "dnsutils"
+        reason: ImagePullBackOff
+  hostIP: 10.0.0.5
+  phase: Pending
+  podIP: 10.244.1.153
+  podIPs:
+  - ip: 10.244.1.153
+  qosClass: BestEffort
+  startTime: "2022-03-25T21:11:24Z"

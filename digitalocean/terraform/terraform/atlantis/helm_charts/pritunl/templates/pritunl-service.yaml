@@ -1,0 +1,29 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ template "pritunl.fullname" . }}
+  labels:
+    app: {{ template "pritunl.name" . }}
+    chart: {{ template "pritunl.chart" . }}
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+  {{- if eq .Values.service.type "LoadBalancer" }}
+  annotations:
+{{ toYaml .Values.service.annotations | trim | indent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: {{ template "pritunl.name" . }}
+    release: "{{ .Release.Name }}"
+  ports:
+  - name: http
+    port: {{ .Values.ports.http }}
+    targetPort: backend-http
+  - name: vpn
+    port: {{ .Values.ports.vpn }}
+    protocol: TCP
+    targetPort: backend-vpn
+  - name: webui
+    port: {{ .Values.ports.webui }}
+    targetPort: backend-webui

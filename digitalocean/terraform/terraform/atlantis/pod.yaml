@@ -1,0 +1,158 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-03-18T21:57:01Z"
+  generateName: pritunl-6fc8bb5cfb-
+  labels:
+    app: pritunl
+    chart: pritunl-0.0.5
+    pod-template-hash: 6fc8bb5cfb
+    release: pritunl
+  name: pritunl-6fc8bb5cfb-6t8hp
+  namespace: mongodb 
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: pritunl-6fc8bb5cfb
+    uid: e6aaf88e-abac-46b6-92d9-33d53401333c
+  resourceVersion: "6381175"
+  uid: 24b889b3-468e-4363-b505-0aabe24d9137
+spec:
+  containers:
+  - env:
+    - name: MONGO_HOST
+      value: pritunl-mongodb
+    image: ghcr.io/autotune/pritunl-k8s-tf-do/autotune/pritunl-k8s-tf-do/pritunl:b8b03170 
+    imagePullPolicy: Always
+    livenessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      successThreshold: 1
+      tcpSocket:
+        port: 443
+      timeoutSeconds: 5
+    name: pritunl
+    ports:
+    - containerPort: 80
+      name: backend-http
+      protocol: TCP
+    - containerPort: 1194
+      name: backend-vpn
+      protocol: TCP
+    - containerPort: 443
+      name: backend-webui
+      protocol: TCP
+    readinessProbe:
+      failureThreshold: 6
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      successThreshold: 1
+      tcpSocket:
+        port: 443
+      timeoutSeconds: 5
+    resources: {}
+    securityContext:
+      privileged: true
+    stdin: true
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    tty: true
+    volumeMounts:
+    - mountPath: /root/.docker
+      name: docker
+      readOnly: true
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-l4gsj
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  imagePullSecrets:
+  - name: regcred
+  nodeName: k8s-mainpool-u91eq
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: docker
+    secret:
+      defaultMode: 420
+      items:
+      - key: .dockerconfigjson
+        path: config.json
+      secretName: regcred
+  - name: kube-api-access-l4gsj
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-03-18T21:57:01Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2022-03-18T21:57:01Z"
+    message: 'containers with unready status: [pritunl]'
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2022-03-18T21:57:01Z"
+    message: 'containers with unready status: [pritunl]'
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2022-03-18T21:57:01Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - image: docker.pkg.github.com/autotune/pritunl-k8s-tf-do/pritunl@sha256:2226ac82e5df788a8313e3b07a151819746c476037b3f8e4f0376673864f72ff
+    imageID: ""
+    lastState: {}
+    name: pritunl
+    ready: false
+    restartCount: 0
+    started: false
+    state:
+      waiting:
+        message: Back-off pulling image "docker.pkg.github.com/autotune/pritunl-k8s-tf-do/pritunl@sha256:2226ac82e5df788a8313e3b07a151819746c476037b3f8e4f0376673864f72ff"
+        reason: ImagePullBackOff
+  hostIP: 10.0.0.7
+  phase: Pending
+  podIP: 10.244.2.47
+  podIPs:
+  - ip: 10.244.2.47
+  qosClass: BestEffort
+  startTime: "2022-03-18T21:57:01Z"

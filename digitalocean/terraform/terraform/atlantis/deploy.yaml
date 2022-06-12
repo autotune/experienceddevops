@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    meta.helm.sh/release-name: pritunl
+    meta.helm.sh/release-namespace: pritunl
+  creationTimestamp: "2022-03-12T01:02:57Z"
+  generation: 2
+  labels:
+    app: pritunl
+    app.kubernetes.io/managed-by: Helm
+    chart: pritunl-0.0.4
+    heritage: Helm
+    release: pritunl
+  name: pritunl
+  namespace: pritunl
+  resourceVersion: "6122059"
+  uid: 8c280ddf-c2b5-4602-ab53-4dcab9cb13fe
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: pritunl
+      release: pritunl
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: pritunl
+        chart: pritunl-0.0.4
+        release: pritunl
+    spec:
+      containers:
+      - env:
+        - name: MONGO_HOST
+          value: pritunl-mongodb
+        image: docker.pkg.github.com/autotune/pritunl-k8s-tf-do/pritunl:a9661a1a 
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 6
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            port: 443
+          timeoutSeconds: 5
+        name: pritunl
+        ports:
+        - containerPort: 80
+          name: backend-http
+          protocol: TCP
+        - containerPort: 1194
+          name: backend-vpn
+          protocol: TCP
+        - containerPort: 443
+          name: backend-webui
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 6
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            port: 443
+          timeoutSeconds: 5
+        resources: {}
+        securityContext:
+          privileged: true
+        stdin: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        tty: true
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: wayofthesys-com-docker-login
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  conditions:
+  - lastTransitionTime: "2022-03-12T01:02:57Z"
+    lastUpdateTime: "2022-03-12T01:02:57Z"
+    message: Deployment does not have minimum availability.
+    reason: MinimumReplicasUnavailable
+    status: "False"
+    type: Available
+  - lastTransitionTime: "2022-03-17T22:30:28Z"
+    lastUpdateTime: "2022-03-17T22:33:06Z"
+    message: ReplicaSet "pritunl-8445c87cf4" is progressing.
+    reason: ReplicaSetUpdated
+    status: "True"
+    type: Progressing
+  observedGeneration: 2
+  replicas: 1
+  unavailableReplicas: 1
+  updatedReplicas: 1

@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/ingress.class: nginx
+  name: {{ template "pritunl.fullname" . }}
+spec:
+  rules:
+  - host: pritunl.{{ template "pritunl.domainname" . }}
+    http:
+      paths: 
+      - backend:
+          service:
+            name: {{ template "pritunl.name" . }}
+            port:
+              number: {{ .Values.ports.http }}
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - pritunl.{{ template "pritunl.domainname" . }}
+    secretName: {{ template "pritunl.secretname" . }}

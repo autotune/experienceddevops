@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: zerossl
+    ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/auth-signin: https://$host/oauth2/start?rd=https://$host$request_uri$is_args$args
+    nginx.ingress.kubernetes.io/auth-url: https://$host/oauth2/auth
+  name: wayofthesys.com-atlantis-ingress
+  namespace: atlantis
+spec:
+  rules:
+  - host: wayofthesys.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: wayofthesys-com-atlantis-service
+            port:
+              number: 80
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - wayofthesys.com
+    secretName: wayofthesys-com-atlantis-tls
