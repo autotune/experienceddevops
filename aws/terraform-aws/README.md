@@ -1,3 +1,14 @@
+## CHALLENGE
+
+Using any language you prefer, write code that creates an EC2 instance running a basic web application in Docker using a single command from the user.
+
+* Before the script is run, there should be no EC2 instances running and afterward the script should output the address of your working web application.
+* The single command from the user can (and likely will) call a longer shell script, or other configuration management code.
+* The web application can be any common framework (Django, Rails, Symfony, etc.), but not the default Nginx or Apache setup.
+* If needed, you can manually create pre-requisites such as SSH key pairs or other prerequisites.
+
+I decided to write it all in Terraform and here we are!
+
 ## NOTES
 
 #### ASSUMPTIONS
